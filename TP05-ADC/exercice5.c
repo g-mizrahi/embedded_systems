@@ -21,19 +21,16 @@ int main(void)
     // Port D6 is the OC0A output
     DDRD |= _BV(DDD6); // Set the port D6 in output mode
 
-    // Potentiometer setup section
-    DDRD |= _BV(DDD4);    // Set the D4 pin to output mode
-    PORTD |= _BV(PORTD4); // Initialize port D4 output to high to power the potentiometer
-
     // ADC setup
-    // By default the selected pin is AD0
+    // ADEN : enable the ADC
     // ADATE : set the auto trigger
     // ADIE : set the interupt enable
     // Set the clock prescaler to 128 for a 125kHz frequency
-    ADCSRA |= _BV(ADATE) | _BV(ADIE) | _BV(ADPS2) | _BV(ADPS1) | _BV(ADPS0);
+    ADCSRA |= _BV(ADEN) | _BV(ADATE) | _BV(ADIE) | _BV(ADPS2) | _BV(ADPS1) | _BV(ADPS0);
+    // Select AVcc as reference voltage
     // Set the result to 8 bits precision
-    // ADMUX LSB left 0 to select pin AD0
-    ADMUX = _BV(ADLAR); // Set the 8 bits precision
+    // MUX3..0 left to 0 to select pin AD0
+    ADMUX = _BV(REFS0) | _BV(ADLAR);
     // ADCSRB is left to 0 to select free running mode
 
     // Timer0 setup section
