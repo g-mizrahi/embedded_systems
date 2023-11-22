@@ -4,16 +4,22 @@
 #include <avr/sleep.h>
 #include <stdio.h>
 
+ISR(TIMER1_COMPA_vect)
+{
+    // toggle the LED
+    PORTD ^= _BV(PORTD6);
+}
+
 ISR(ADC_vect)
 {
-    OCR0A = ADCH; // Change brightness of LED
+    OCR1A = ADCH << 8;
 }
 
 int main(void)
 {
     // Power management section
     power_all_disable();             // Disable all modules
-    power_timer0_enable();           // Enable the Timer0 module
+    power_timer1_enable();           // Enable the Timer0 module
     power_adc_enable();              // Enable the ADC
     set_sleep_mode(SLEEP_MODE_IDLE); // Set the sleep mode to IDLE to keep the Timer0 running and the ADC
 
@@ -33,11 +39,12 @@ int main(void)
     ADMUX = _BV(REFS0) | _BV(ADLAR);
     // ADCSRB is left to 0 to select free running mode
 
-    // Timer0 setup section
-    OCR0A = 0x0;                                   // Set the TOP value to start with the LED shut down
-    TCCR0A = _BV(WGM01) | _BV(WGM00) | _BV(COM0A1); // Set the mode to Fast PWM with the desired mode for Timer0
-    TCCR0B = _BV(CS00);                             // Set the clock to io with no prescaler
-    TCNT0 = 0;                                      // Reset timer before starting the loop for consistent delays
+    // Timer1 setup section
+    OCR1A = 0x7A12;                   // Set the TOP value to have 500ms time interval initially (it will be erased by ADC)
+    TCCR1B |= _BV(CS12) | _BV(WGM12); // Set the prescaler to 256 and the mode to CTC
+    TIMSK1 |= _BV(OCIE1A);            // Set the interrupt mode to Match Compare A
+
+    TCNT1 = 0; // Reset timer before starting the loop for consistent delays
 
     sei();
     ADCSRA |= _BV(ADSC); // Start conversion
